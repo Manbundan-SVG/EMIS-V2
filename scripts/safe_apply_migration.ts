@@ -43,9 +43,12 @@ Flags:
   --confirm-prod        Required when --env=prod and --apply
   --allow-destructive   Required if migration contains DROP/TRUNCATE/ALTER ROLE
 
-Env vars (per-target project ref):
-  SUPABASE_PROJECT_REF_DEV, SUPABASE_PROJECT_REF_STAGING, SUPABASE_PROJECT_REF_PROD
-  SUPABASE_ACCESS_TOKEN (read by the supabase CLI)`);
+Env vars (per-target Postgres URL):
+  SUPABASE_DB_URL_DEV, SUPABASE_DB_URL_STAGING, SUPABASE_DB_URL_PROD
+
+Prod safety:
+  --env=prod with --apply requires CI (CI=true or GITHUB_ACTIONS=true).
+  Local override (hotfix only): EMIS_ALLOW_PROD_FROM_LOCAL=1`);
 }
 
 function parseArgs(argv: string[]): Args {
@@ -143,22 +146,41 @@ function validate(args: Args): void {
   }
 }
 
-function envProjectRef(env: Env): string {
-  const key = `SUPABASE_PROJECT_REF_${env.toUpperCase()}`;
-  const ref = process.env[key];
-  if (!ref) {
+function envDbUrl(env: Env): string {
+  const key = `SUPABASE_DB_URL_${env.toUpperCase()}`;
+  const url = process.env[key];
+  if (!url) {
     throw new Error(
-      `Env var ${key} is not set. Cannot resolve target project for ${env}.`,
+      `Env var ${key} is not set. Cannot resolve target database for ${env}.`,
     );
   }
-  return ref;
+  return url;
+}
+
+function redactDbUrl(url: string): string {
+  return url.replace(/(:\/\/[^:]+:)([^@]+)(@)/, '$1***$3');
+}
+
+function assertCiForProd(args: Args): void {
+  if (args.env !== 'prod' || !args.apply) return;
+  const inCi = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
+  if (inCi) return;
+  if (process.env.EMIS_ALLOW_PROD_FROM_LOCAL === '1') {
+    console.warn('[safe-apply] WARNING: applying to prod from local (EMIS_ALLOW_PROD_FROM_LOCAL=1). Hotfix only.');
+    return;
+  }
+  throw new Error(
+    `--env=prod with --apply must run from CI (CI=true or GITHUB_ACTIONS=true).\n` +
+      `For emergency hotfixes only, set EMIS_ALLOW_PROD_FROM_LOCAL=1 explicitly.\n` +
+      `Doing this from an agent context is a security incident.`,
+  );
 }
 
 function applyMigration(args: Args): void {
-  const ref = envProjectRef(args.env);
-  console.log(`[safe-apply] supabase db push -p ${ref} (env=${args.env})`);
+  const url = envDbUrl(args.env);
+  console.log(`[safe-apply] supabase db push --db-url ${redactDbUrl(url)} (env=${args.env})`);
   try {
-    execFileSync('supabase', ['db', 'push', '-p', ref], { stdio: 'inherit' });
+    execFileSync('supabase', ['db', 'push', '--db-url', url], { stdio: 'inherit' });
   } catch (e) {
     const code = (e as NodeJS.ErrnoException).code;
     if (code === 'ENOENT') {
@@ -175,6 +197,7 @@ function main() {
 
   console.log(`[safe-apply] validating ${args.file} for env=${args.env}...`);
   validate(args);
+  assertCiForProd(args);
 
   const baseEntry: Omit<DeploymentEntry, 'applied_at' | 'status' | 'message'> = {
     ts: nowIso(),
