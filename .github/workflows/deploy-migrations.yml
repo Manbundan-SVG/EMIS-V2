@@ -18,6 +18,10 @@ on:
         description: Allow DROP/TRUNCATE/ALTER ROLE on prod
         type: boolean
         default: false
+      dry_run:
+        description: Validate only — do not apply (use to verify secret wiring)
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -66,9 +70,12 @@ jobs:
           SUPABASE_DB_URL_PROD: ${{ secrets.SUPABASE_DB_URL_PROD }}
         run: |
           set -euo pipefail
-          ARGS=( --file "${{ inputs.file }}" --env "${{ inputs.env }}" --apply )
-          if [ "${{ inputs.env }}" = "prod" ]; then
-            ARGS+=( --confirm-prod )
+          ARGS=( --file "${{ inputs.file }}" --env "${{ inputs.env }}" )
+          if [ "${{ inputs.dry_run }}" != "true" ]; then
+            ARGS+=( --apply )
+            if [ "${{ inputs.env }}" = "prod" ]; then
+              ARGS+=( --confirm-prod )
+            fi
           fi
           if [ "${{ inputs.allow_destructive }}" = "true" ]; then
             ARGS+=( --allow-destructive )
@@ -76,7 +83,7 @@ jobs:
           pnpm db:migrate:apply -- "${ARGS[@]}"
 
       - name: Commit audit log
-        if: success()
+        if: success() && inputs.dry_run != true
         run: |
           set -euo pipefail
           if [ -n "$(git status --porcelain audit/deployments.jsonl)" ]; then
