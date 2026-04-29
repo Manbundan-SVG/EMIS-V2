@@ -1,0 +1,25 @@
+{
+  "name": "emis-phase-1",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "volta": {
+    "node": "22.17.1",
+    "pnpm": "10.0.0"
+  },
+  "engines": {
+    "node": ">=20.9.0 <25"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @emis/web dev",
+    "build": "pnpm --filter @emis/types build && pnpm --filter @emis/signal-registry build && pnpm --filter @emis/web build",
+    "lint": "pnpm --filter @emis/web lint",
+    "web:prepare:cache": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\prepare-next-cache.ps1",
+    "web:start:3002": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\prepare-next-cache.ps1 && cd apps/web && .\\node_modules\\.bin\\next.cmd start --hostname 127.0.0.1 --port 3002",
+    "web:reset:start": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\web-clean-start.ps1 -Port 3002",
+    "web:safe:reset:start": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\web-safe-start.ps1 -Port 3002",
+    "web:safe:dev:start": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\web-safe-start.ps1 -Port 3002 -Mode dev",
+    "seed:demo": "cd apps/worker && python -m src.scripts.seed_demo_data",
+    "sync:crypto": "cd apps/worker && python -m src.scripts.sync_crypto_market_data",
+    "worker": "cd apps/worker && python -m src.main"
+  }
+}

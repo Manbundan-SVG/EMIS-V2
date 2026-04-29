@@ -1,0 +1,47 @@
+# Dependencies & caches — match at ANY depth
+**/node_modules/
+**/.npm-cache/
+**/.pnpm-store/
+**/.yarn/
+**/.cache/
+
+# Next.js / Turbo / build outputs
+**/.next/
+**/.turbo/
+**/dist/
+**/build/
+**/out/
+**/coverage/
+
+# Python
+**/.venv/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Env files (NEVER commit secrets)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Lockfiles we don't want in this repo (kept out per project policy)
+pnpm-lock.yaml
+
+# OS / editor / browser crash dumps
+.DS_Store
+Thumbs.db
+.history/
+.edge-*
+*.log
+
+# IDE settings (optional — uncomment if desired)
+# .vscode/
+# .idea/
+
+# Local-only artifacts
+ai-memory.db
+_archive/
+_tmp_*/

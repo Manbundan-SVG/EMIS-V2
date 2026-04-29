@@ -1,0 +1,16 @@
+pyproject.toml
+./src/config.py
+./src/main.py
+./src/db/client.py
+./src/db/repositories.py
+./src/features/feature_service.py
+./src/ingestion/base.py
+./src/jobs/scheduler.py
+./src/scripts/seed_demo_data.py
+./src/signals/composite_service.py
+./src/signals/signal_service.py
+emis_worker.egg-info/PKG-INFO
+emis_worker.egg-info/SOURCES.txt
+emis_worker.egg-info/dependency_links.txt
+emis_worker.egg-info/requires.txt
+emis_worker.egg-info/top_level.txt
