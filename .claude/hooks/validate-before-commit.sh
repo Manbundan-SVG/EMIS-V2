@@ -4,7 +4,6 @@ set -euo pipefail
 echo "[EMIS] Running pre-commit validation..."
 
 has_replay_fixtures="false"
-has_phase_validator="false"
 has_replay_validator="false"
 
 # Real fixture detection: ignore placeholder files such as .gitkeep.
@@ -13,23 +12,25 @@ if [ -d "tests/fixtures/replay" ] && \
   has_replay_fixtures="true"
 fi
 
-# Use tracked files only. Avoid scanning node_modules, dist, .next, etc.
-# Tightened: anchor base name to avoid matching helper files like validate_phase_helpers.ts.
-if git ls-files | grep -E '(^|/)validate_phase[^/]*\.(ts|tsx|py)$' >/dev/null 2>&1; then
-  has_phase_validator="true"
-fi
-
+# Replay-validator detection. We intentionally do NOT detect
+# validate_phase*.{ts,tsx,py} as a gate trigger: in this repo those
+# files (apps/worker/src/scripts/validate_phase*.py) are live-DB
+# integration smokes that connect to Postgres via DATABASE_URL — they
+# are not deterministic-replay-from-frozen-fixture validators per the
+# emis-replay skill contract. A replay validator, by definition,
+# recomputes outputs from frozen fixtures and asserts hash equality,
+# and lives at scripts/validate_replay.{ts,py}.
 if git ls-files | grep -E '(^|/)scripts/validate_replay\.(ts|py)$' >/dev/null 2>&1; then
   has_replay_validator="true"
 fi
 
-# Bootstrap mode: allows committing the Claude skills layer before
-# the repo has real fixtures/validators.
+# Bootstrap mode: allows committing before the replay layer exists.
+# Once scripts/validate_replay.{ts,py} or any tests/fixtures/replay
+# file is committed, the four-family fixture gate becomes hard.
 if [ "$has_replay_fixtures" = "false" ] && \
-   [ "$has_phase_validator" = "false" ] && \
    [ "$has_replay_validator" = "false" ]; then
-  echo "[EMIS] Bootstrap mode: no real replay fixtures or validators found."
-  echo "[EMIS] Skipping fixture gate for initial skills/bootstrap commit."
+  echo "[EMIS] Bootstrap mode: no replay validator or fixtures present."
+  echo "[EMIS] Skipping fixture gate for pre-replay-layer commits."
 else
   required_families=("market_data" "liquidation" "sentiment" "macro")
 
