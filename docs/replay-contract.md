@@ -1,6 +1,6 @@
 # EMIS Replay Validation — Design Contract
 
-**Status:** Draft for review.
+**Status:** Decisions locked 2026-04-29 (see § 12). Ready for implementation per the build sequence in § 11.
 **Owner:** TBD.
 **Skill reference:** `emis-replay`.
 
@@ -76,17 +76,19 @@ locked once and not changed without a migration note.
 
 ```ts
 type ReplayManifest = {
-  target: string              // "market_data:btc_1h_sma5"; family:transform key
-  replayWindowStart: string   // ISO-8601 UTC, ms precision
-  replayWindowEnd: string     // ISO-8601 UTC, ms precision
-  rawInputHash: string        // sha256 hex of the raw fixture bytes
-  configHash: string          // sha256 hex of the canonical config JSON
-  schemaVersion: string       // e.g., "v1"
-  featureVersion: string      // "sma5@1.0.0" — semver of the transform
-  modelVersion: string        // semver of the model; "n/a" for non-model features
-  outputHash: string          // sha256 hex of the canonical output bytes
-  validatorVersion: string    // "validate_replay@1.0.0"
-  createdAt: string           // ISO-8601 UTC, ms precision
+  target: string                    // "market_data:btc_1h_sma5"; family:transform key
+  replayWindowStart: string         // ISO-8601 UTC, ms precision
+  replayWindowEnd: string           // ISO-8601 UTC, ms precision
+  rawInputHash: string              // sha256 hex of the raw fixture bytes
+  configHash: string                // sha256 hex of the canonical config JSON
+  schemaVersion: string             // family-scoped, e.g. "market_data_fixture@1.0.0"
+  featureVersion: string            // "sma5@1.0.0" — semver of the transform
+  modelVersion: string              // semver of the model; "n/a" for non-model features
+  outputHash: string                // sha256 hex of the canonical output bytes
+  validatorVersion: string          // "validate_replay@1.0.0"
+  fixtureGeneratorVersion: string   // "generate_replay_fixtures@1.0.0"
+  fixtureSeed: string               // "emis-replay-v1:2026-04-29" (constant in the generator)
+  createdAt: string                 // ISO-8601 UTC, ms precision
 };
 ```
 
@@ -111,7 +113,7 @@ locking).
 
 ### 5.1 `market_data`
 
-**Source schema** (matches `market_bars` table from migration 0001):
+**Source table:** `market_bars` (created in migration 0001).
 
 | Column | Type | Notes |
 |---|---|---|
@@ -137,36 +139,56 @@ indexing bugs, off-by-one, lookahead leakage.
 
 ### 5.2 `liquidation`
 
-**Source schema** (look for the relevant table — likely added in a
-phase-2.7 or phase-4.x migration; lock during implementation):
+**Source table:** `market_liquidations` (created in migration 0001).
+
+**Locked fixture schema:**
 
 | Column | Type | Notes |
 |---|---|---|
 | `asset_id` | uuid |  |
 | `ts` | timestamptz | event time, UTC |
 | `side` | text | `long` \| `short` |
-| `size_usd` | numeric | USD-equivalent notional |
-| `price` | numeric |  |
+| `notional_usd` | numeric | USD-equivalent notional |
+| `reference_price` | numeric |  |
 | `source` | text |  |
+
+**Fixture-writer alias mapping** (illustrative draft names → locked
+column names — generators must emit the locked names):
+
+```
+size_usd  → notional_usd
+price     → reference_price
+```
+
+**Audit item, do not block:** migration 0024 creates an idempotency
+index referring to `liquidation_notional_1h` while the base
+`market_liquidations` table from 0001 has `notional_usd`. Confirm
+against the live migration history before locking the production
+schema. The replay fixture follows the base 0001 event-table shape.
 
 **Fixture format:** JSONL (one event per line), naturally sparse.
 
 **Sample size:** ~50 events over a 24h window for one asset.
 
-**Output transform (illustrative):** Hourly liquidation volume by side,
-`{hour_start_ts, side, total_size_usd}`.
+**Output transform (target `liquidation:btc_hourly_side_notional`):**
+Hourly aggregate notional by side,
+`{hour_start_ts, side, total_notional_usd}`.
 
 ### 5.3 `sentiment`
 
-**Source schema** (lock during implementation — search migrations for
-`sentiment` table):
+**Source table:** none yet. No raw sentiment table is present in the
+current schema. Sentiment replay is a **synthetic external fixture
+family** for MVP — it does not correspond to a DB table, only to a
+file-based fixture. Future-table candidate: `sentiment_observations`.
+
+**Locked fixture schema** (file-only, not DB-mapped):
 
 | Column | Type | Notes |
 |---|---|---|
-| `asset_id` | uuid |  |
-| `ts` | timestamptz |  |
-| `score` | numeric | normalized to [-1, 1] |
+| `asset_symbol` | text | not asset_id, since no FK is enforced |
+| `ts` | timestamptz | UTC |
 | `source` | text |  |
+| `score` | numeric | normalized to [-1, 1] |
 | `sample_size` | int | number of underlying observations |
 
 **Fixture format:** JSONL.
@@ -174,27 +196,41 @@ phase-2.7 or phase-4.x migration; lock during implementation):
 **Sample size:** ~50 readings across 2–3 sources over 24h for one
 asset.
 
-**Output transform (illustrative):** Source-weighted hourly sentiment
-aggregate, weight = `sqrt(sample_size)`.
+**Output transform (target `sentiment:btc_source_weighted_hourly`):**
+Source-weighted hourly aggregate, weight = `sqrt(sample_size)`.
+
+**On promotion to a real table:** when a vendor or source is onboarded
+and a `sentiment_observations` table is created, this fixture's column
+names should be reviewed against the table and a fixture-schema
+migration noted in `audit/replay-migrations.md`.
 
 ### 5.4 `macro`
 
-**Source schema** (likely from `0025_phase2_7_macro_provider_path.sql`
-and `0027`/`0028`; lock during implementation):
+**Source table:** `macro_series_points` (created in migration 0001).
+
+**Locked fixture schema:**
 
 | Column | Type | Notes |
 |---|---|---|
-| `indicator` | text | e.g. `CPIAUCSL`, `UNRATE`, `DGS10`, `DXY` |
+| `series_key` | text | e.g. `CPIAUCSL`, `UNRATE`, `DGS10`, `DXY` |
 | `ts` | timestamptz | release/observation time, UTC |
 | `value` | numeric |  |
 | `source` | text |  |
+
+**Audit item, do not block:** migration 0061 (multi-asset normalized
+view) refers to `macro_series_points.series_code` through the catalog
+metadata path, while the base 0001 schema uses `series_key`. Confirm
+whether a later migration aliases or renames the column before locking
+the production schema. The replay fixture follows the base 0001 column
+name (`series_key`).
 
 **Fixture format:** CSV.
 
 **Sample size:** ~20 readings across 3–5 indicators over a month.
 
-**Output transform (illustrative):** Indicator-level z-score against
-the rolling-30-reading baseline within the fixture window.
+**Output transform (target `macro:indicator_zscore_30`):**
+Indicator-level z-score against the rolling-30-reading baseline within
+the fixture window.
 
 ## 6. Hash computation rules
 
@@ -243,8 +279,57 @@ Serialized as JSON strings to preserve precision (`"0.123456789012"`).
 
 ## 7. Validator behavior
 
-`scripts/validate_replay.py` (Python is the natural choice given the
-worker stack; a TS variant can mirror it later if needed):
+`scripts/validate_replay.py` is the MVP runtime — Python only. The
+worker is Python and the existing feature/signal code lives there. A TS
+mirror is explicitly deferred (see § 10).
+
+### 7.1 Transform registry
+
+Production rows currently emit `feature_name`, `timestamp`, `value`,
+`meta` (and signals emit `signal_name`, `timestamp`, `score`,
+`explanation`) — neither carries an explicit `feature_version` or
+`model_version` column. Adding those columns is a future migration; the
+replay layer **does not** wait for it. Instead, the validator owns
+versioning via a registry:
+
+```python
+# scripts/validate_replay.py (sketch)
+
+REPLAY_TRANSFORMS = {
+    "market_data:btc_1h_sma5": {
+        "feature_version": "sma5@1.0.0",
+        "model_version": "n/a",
+        "schema_version": "market_data_fixture@1.0.0",
+        "callable": compute_btc_1h_sma5,
+    },
+    "liquidation:btc_hourly_side_notional": {
+        "feature_version": "hourly_liq_side_notional@1.0.0",
+        "model_version": "n/a",
+        "schema_version": "liquidation_fixture@1.0.0",
+        "callable": compute_hourly_liq_side_notional,
+    },
+    "sentiment:btc_source_weighted_hourly": {
+        "feature_version": "source_weighted_hourly@1.0.0",
+        "model_version": "n/a",
+        "schema_version": "sentiment_fixture@1.0.0",
+        "callable": compute_source_weighted_hourly_sentiment,
+    },
+    "macro:indicator_zscore_30": {
+        "feature_version": "indicator_zscore_30@1.0.0",
+        "model_version": "n/a",
+        "schema_version": "macro_fixture@1.0.0",
+        "callable": compute_indicator_zscore_30,
+    },
+}
+```
+
+The registry is the version authority for replay. When a transform is
+intentionally changed, bump `feature_version` (or `model_version`) in
+the registry, regenerate the manifest's golden, and add an entry to
+`audit/replay-migrations.md` (§ 9). Production-row column additions can
+follow later without disturbing replay.
+
+### 7.2 CLI
 
 ```
 Usage: python scripts/validate_replay.py [--target <key>] [--update-golden]
@@ -300,10 +385,22 @@ The pre-commit hook calls the validator on every commit. CI runs it on
 every PR. A `featureVersion` or `modelVersion` bump that changes
 `outputHash` requires:
 
-1. A line in `audit/replay-migrations.md`:
-   `2026-04-29 — market_data:btc_1h_sma5 — sma5@1.0.0 → sma5@1.1.0 — fixed off-by-one in window initialization — confirmed unintended behavior in v1.0.0`
+1. A row in `audit/replay-migrations.md` (table, append-only):
+
+   ```markdown
+   | Date | Target | Old Version | New Version | Old Hash | New Hash | Reason | Owner |
+   |---|---|---|---|---|---|---|---|
+   | 2026-04-29 | market_data:btc_1h_sma5 | sma5@1.0.0 | sma5@1.1.0 | abc... | def... | Fixed off-by-one window initialization | D |
+   ```
+
+   Required columns: `Date`, `Target`, `Old Version`, `New Version`,
+   `Old Hash`, `New Hash`, `Reason`, `Owner`. Hashes truncated to 12
+   chars in the table; full hashes live in the manifest.
+
 2. The corresponding `__golden__/<target>.json` updated in the same
    commit, with the diff visible in PR review.
+
+3. The PR description links the migration row.
 
 A bump that *doesn't* change `outputHash` is a no-op and should be
 flagged in review (likely indicates a stale version bump).
@@ -325,18 +422,24 @@ Explicitly deferred:
 
 When implementation begins, in this order:
 
-1. **Lock schemas.** Audit the relevant migrations for `market_bars`,
-   the liquidation table, the sentiment table, the macro indicator
-   table; record the field list and version.
-2. **Pick transforms.** Pick one existing feature per family from
-   `apps/worker/src/features/` or `apps/worker/src/signals/` and lock
-   its version. If no obvious candidate exists, write a stub feature
-   per the illustrative transforms in § 5.
+1. **Schemas are locked** in § 5 (per the appendix decisions). Two
+   audit items remain — the `liquidation_notional_1h` reference in
+   migration 0024 and the `series_code` vs `series_key` divergence in
+   migration 0061 — to be confirmed against the live migration history
+   before the production schema is locked. Neither blocks the fixture
+   work.
+2. **Pick the four transforms** in `apps/worker/src/features/` or
+   `apps/worker/src/signals/` (or write stubs to match the registry in
+   § 7.1). Production code currently lacks `feature_version` /
+   `model_version` columns; the registry is the version authority for
+   replay until a future migration adds them.
 3. **Write `.gitattributes`** to enforce LF endings on fixture files.
-4. **Write fixture-generation script** (`scripts/generate_fixtures.py`,
-   one-shot, deterministic, seeded RNG) that produces the four fixture
-   files.
-5. **Write the validator** (`scripts/validate_replay.py`).
+4. **Write fixture-generation script**
+   `scripts/generate_replay_fixtures.py` — one-shot, deterministic,
+   seeded RNG via the constants `FIXTURE_GENERATOR_VERSION` and
+   `FIXTURE_SEED` (see § 4). Produces the four fixture files.
+5. **Write the validator** (`scripts/validate_replay.py`) with the
+   transform registry in § 7.1.
 6. **Generate manifest** by running the validator with `--update-golden`,
    inspecting diffs, committing.
 7. **Wire the required checks** as `apps/worker/tests/replay/test_*.py`.
@@ -345,17 +448,27 @@ When implementation begins, in this order:
 9. **Open PR for review.** This is the moment the hard gate becomes
    real for everyone.
 
-## 12. Open questions for review
+## 12. Locked decisions (2026-04-29)
 
-1. Do existing features in `apps/worker/src/features/` have explicit
-   versioning? If not, we need to add it as part of this work.
-2. Do liquidation / sentiment tables exist in the current schema, and
-   under what names? (Migrations 0024–0028 and 0061–0063 are likely
-   sites — confirm before locking § 5.)
-3. Should the validator be Python only, or do we want a TS variant for
-   parity with the deploy gate?
-4. Where does the fixture-generation script's seeded RNG state live?
-   (Suggest: pinned in the script as a constant; same script always
-   generates same fixtures.)
-5. Audit log location: `audit/replay-migrations.md` is a fresh path —
-   confirm or relocate.
+| # | Question | Decision |
+|---|---|---|
+| 1 | Existing feature versioning? | None. Add at the replay layer first via the transform registry (§ 7.1). Production-row column additions come later as their own migration. |
+| 2 | Liquidation table | `market_liquidations` (created in migration 0001). Fixture columns: `asset_id, ts, side, notional_usd, reference_price, source`. |
+| 2 | Macro table | `macro_series_points` (created in migration 0001). Fixture columns: `series_key, ts, value, source`. |
+| 2 | Sentiment table | None yet. Sentiment is a synthetic external fixture family for MVP; future-table candidate `sentiment_observations`. |
+| 3 | Validator runtime | Python only for MVP. TS mirror deferred. |
+| 4 | Seeded RNG | Constants in `scripts/generate_replay_fixtures.py` (`FIXTURE_GENERATOR_VERSION`, `FIXTURE_SEED`); copied into manifest metadata. |
+| 5 | Audit log path | `audit/replay-migrations.md`, table format defined in § 9. |
+
+### Audit items, do not block fixture work
+
+These should be confirmed against the live migration history before
+the **production** schema is locked, but the **replay fixture** schema
+follows the base 0001 column names regardless:
+
+- Migration 0024 references `liquidation_notional_1h` while base
+  `market_liquidations` has `notional_usd`. Confirm whether 0024
+  introduces a derived view/column or whether the reference is stale.
+- Migration 0061 (multi-asset normalized view) refers to
+  `macro_series_points.series_code` while 0001 defines `series_key`.
+  Confirm whether a later migration aliases or renames the column.
