@@ -1,0 +1,4 @@
+# Replay fixtures and goldens are byte-stable across OSes by construction.
+# Hashes depend on exact byte content; CRLF line endings would break them.
+tests/fixtures/replay/** text eol=lf
+audit/replay-migrations.md text eol=lf
