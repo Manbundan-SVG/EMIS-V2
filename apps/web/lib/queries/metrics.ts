@@ -7498,6 +7498,161 @@ export async function getCrossAssetConflictAttributionMetrics(
     runConflictAttributionSummary: (run.data ?? []) as RunCrossAssetConflictAttributionSummaryRow[],
   };
 }
+
+// ── Phase 4.8C: Conflict-Aware Composite Refinement ─────────────────────
+
+export interface CrossAssetConflictCompositeSummaryRow {
+  workspace_id: string;
+  watchlist_id: string;
+  run_id: string;
+  context_snapshot_id: string | null;
+  base_signal_score: number | string | null;
+  cross_asset_net_contribution: number | string | null;
+  weighted_cross_asset_net_contribution: number | string | null;
+  regime_adjusted_cross_asset_contribution: number | string | null;
+  timing_adjusted_cross_asset_contribution: number | string | null;
+  transition_adjusted_cross_asset_contribution: number | string | null;
+  archetype_adjusted_cross_asset_contribution: number | string | null;
+  cluster_adjusted_cross_asset_contribution: number | string | null;
+  persistence_adjusted_cross_asset_contribution: number | string | null;
+  decay_adjusted_cross_asset_contribution: number | string | null;
+  conflict_adjusted_cross_asset_contribution: number | string | null;
+  composite_pre_conflict: number | string | null;
+  conflict_net_contribution: number | string | null;
+  composite_post_conflict: number | string | null;
+  layer_consensus_state: string;
+  agreement_score: number | string | null;
+  conflict_score: number | string | null;
+  dominant_conflict_source: string | null;
+  integration_mode: string;
+  source_contribution_layer: string | null;
+  source_composite_layer: string | null;
+  scoring_version: string;
+  created_at: string;
+}
+
+export interface CrossAssetFamilyConflictCompositeSummaryRow {
+  workspace_id: string;
+  watchlist_id: string;
+  run_id: string;
+  context_snapshot_id: string | null;
+  dependency_family: string;
+  family_consensus_state: string;
+  agreement_score: number | string | null;
+  conflict_score: number | string | null;
+  dominant_conflict_source: string | null;
+  conflict_adjusted_family_contribution: number | string | null;
+  integration_weight_applied: number | string | null;
+  conflict_integration_contribution: number | string | null;
+  family_rank: number | null;
+  top_symbols: string[];
+  reason_codes: string[];
+  source_contribution_layer: string | null;
+  scoring_version: string;
+  created_at: string;
+}
+
+export interface RunCrossAssetConflictIntegrationSummaryRow {
+  run_id: string;
+  workspace_id: string;
+  watchlist_id: string;
+  context_snapshot_id: string | null;
+  cross_asset_net_contribution: number | string | null;
+  weighted_cross_asset_net_contribution: number | string | null;
+  regime_adjusted_cross_asset_contribution: number | string | null;
+  timing_adjusted_cross_asset_contribution: number | string | null;
+  transition_adjusted_cross_asset_contribution: number | string | null;
+  archetype_adjusted_cross_asset_contribution: number | string | null;
+  cluster_adjusted_cross_asset_contribution: number | string | null;
+  persistence_adjusted_cross_asset_contribution: number | string | null;
+  decay_adjusted_cross_asset_contribution: number | string | null;
+  conflict_adjusted_cross_asset_contribution: number | string | null;
+  conflict_net_contribution: number | string | null;
+  composite_pre_conflict: number | string | null;
+  composite_post_conflict: number | string | null;
+  dominant_dependency_family: string | null;
+  weighted_dominant_dependency_family: string | null;
+  regime_dominant_dependency_family: string | null;
+  timing_dominant_dependency_family: string | null;
+  transition_dominant_dependency_family: string | null;
+  archetype_dominant_dependency_family: string | null;
+  cluster_dominant_dependency_family: string | null;
+  persistence_dominant_dependency_family: string | null;
+  decay_dominant_dependency_family: string | null;
+  conflict_dominant_dependency_family: string | null;
+  layer_consensus_state: string | null;
+  agreement_score: number | string | null;
+  conflict_score: number | string | null;
+  dominant_conflict_source: string | null;
+  integration_mode: string | null;
+  source_contribution_layer: string | null;
+  source_composite_layer: string | null;
+  scoring_version: string | null;
+  created_at: string;
+}
+
+export async function getCrossAssetConflictCompositeMetrics(
+  workspaceSlug: string,
+  watchlistSlug?: string,
+): Promise<{
+  conflictCompositeSummary: CrossAssetConflictCompositeSummaryRow[];
+  familyConflictCompositeSummary: CrossAssetFamilyConflictCompositeSummaryRow[];
+  finalConflictIntegrationSummary: RunCrossAssetConflictIntegrationSummaryRow[];
+}> {
+  const supabase = createServiceSupabaseClient();
+  const workspaceId = await getWorkspaceId(workspaceSlug);
+
+  let watchlistId: string | null = null;
+  if (watchlistSlug) {
+    type WlResult = { data: { id: string } | null; error: { message: string } | null };
+    const wl = await supabase
+      .from("watchlists")
+      .select("id")
+      .eq("workspace_id", workspaceId)
+      .eq("slug", watchlistSlug)
+      .single() as unknown as WlResult;
+    if (wl.error || !wl.data) throw new Error(`Watchlist not found: ${watchlistSlug}`);
+    watchlistId = wl.data.id;
+  }
+
+  const baseComposite = supabase
+    .from("cross_asset_conflict_composite_summary")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const baseFamily = supabase
+    .from("cross_asset_family_conflict_composite_summary")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false })
+    .order("family_rank", { ascending: true, nullsFirst: false })
+    .limit(200);
+
+  const baseFinal = supabase
+    .from("run_cross_asset_conflict_integration_summary")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  const [composite, family, final] = await Promise.all([
+    watchlistId ? baseComposite.eq("watchlist_id", watchlistId) : baseComposite,
+    watchlistId ? baseFamily.eq("watchlist_id", watchlistId) : baseFamily,
+    watchlistId ? baseFinal.eq("watchlist_id", watchlistId) : baseFinal,
+  ]);
+
+  if (composite.error) throw new Error(`Conflict composite summary error: ${composite.error.message}`);
+  if (family.error) throw new Error(`Family conflict composite summary error: ${family.error.message}`);
+  if (final.error) throw new Error(`Final conflict integration summary error: ${final.error.message}`);
+
+  return {
+    conflictCompositeSummary: (composite.data ?? []) as CrossAssetConflictCompositeSummaryRow[],
+    familyConflictCompositeSummary: (family.data ?? []) as CrossAssetFamilyConflictCompositeSummaryRow[],
+    finalConflictIntegrationSummary: (final.data ?? []) as RunCrossAssetConflictIntegrationSummaryRow[],
+  };
+}
   workspace_id: string;
   watchlist_id: string;
   run_id: string;
