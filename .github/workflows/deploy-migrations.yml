@@ -1,0 +1,93 @@
+name: deploy-migrations
+
+# Manual-only. Auto-apply on merge is intentionally not wired up — too easy
+# to misuse. Triggering this workflow is the deliberate "go" decision.
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Target environment
+        type: choice
+        options: [dev, staging, prod]
+        required: true
+      file:
+        description: Migration file path (e.g., supabase/migrations/0095_foo.sql)
+        type: string
+        required: true
+      allow_destructive:
+        description: Allow DROP/TRUNCATE/ALTER ROLE on prod
+        type: boolean
+        default: false
+      dry_run:
+        description: Validate only — do not apply (use to verify secret wiring)
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+    steps:
+      - name: Enforce main-only dispatch
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "::error::deploy-migrations must run on main (got: ${{ github.ref }})"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install supabase CLI
+        run: |
+          set -euo pipefail
+          curl -fsSL "https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz" -o supabase.tar.gz
+          tar -xzf supabase.tar.gz
+          sudo mv supabase /usr/local/bin/
+          supabase --version
+
+      - name: Install deps
+        run: pnpm install
+
+      - name: Apply migration
+        env:
+          SUPABASE_DB_URL_DEV: ${{ secrets.SUPABASE_DB_URL_DEV }}
+          SUPABASE_DB_URL_STAGING: ${{ secrets.SUPABASE_DB_URL_STAGING }}
+          SUPABASE_DB_URL_PROD: ${{ secrets.SUPABASE_DB_URL_PROD }}
+        run: |
+          set -euo pipefail
+          ARGS=( --file "${{ inputs.file }}" --env "${{ inputs.env }}" )
+          if [ "${{ inputs.dry_run }}" != "true" ]; then
+            ARGS+=( --apply )
+            if [ "${{ inputs.env }}" = "prod" ]; then
+              ARGS+=( --confirm-prod )
+            fi
+          fi
+          if [ "${{ inputs.allow_destructive }}" = "true" ]; then
+            ARGS+=( --allow-destructive )
+          fi
+          pnpm db:migrate:apply -- "${ARGS[@]}"
+
+      - name: Commit audit log
+        if: success() && inputs.dry_run != true
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain audit/deployments.jsonl)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add audit/deployments.jsonl
+            git commit -m "audit: deploy ${{ inputs.file }} to ${{ inputs.env }}"
+            git push origin HEAD:main
+          fi
