@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+shopt -s nullglob
+hooks=()
+for prefix in validate- block- check-; do
+  for f in "$HOOK_DIR"/${prefix}*.sh; do
+    hooks+=("$f")
+  done
+done
+
+if [ "${#hooks[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+for hook in "${hooks[@]}"; do
+  if [ -x "$hook" ]; then
+    "$hook" "$@"
+  else
+    bash "$hook" "$@"
+  fi
+done
