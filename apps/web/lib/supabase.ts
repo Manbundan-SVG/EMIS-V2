@@ -6610,6 +6610,189 @@ export type Database = {
         };
         Relationships: [];
       };
+      // ── Phase 4.8C: Conflict-Aware Composite Refinement ─────────────────
+      cross_asset_conflict_integration_profiles: {
+        Row: {
+          id: string;
+          workspace_id: string;
+          profile_name: string;
+          is_active: boolean;
+          integration_mode: string;
+          integration_weight: number | string;
+          aligned_supportive_scale: number | string;
+          aligned_suppressive_scale: number | string;
+          partial_agreement_scale: number | string;
+          conflicted_scale: number | string;
+          unreliable_scale: number | string;
+          insufficient_context_scale: number | string;
+          conflict_extra_suppression: number | string;
+          unreliable_extra_suppression: number | string;
+          dominant_conflict_source_suppression: Record<string, unknown>;
+          max_positive_contribution: number | string;
+          max_negative_contribution: number | string;
+          metadata: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["cross_asset_conflict_integration_profiles"]["Row"]> & {
+          workspace_id: string; profile_name: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["cross_asset_conflict_integration_profiles"]["Row"]>;
+        Relationships: [];
+      };
+      cross_asset_conflict_composite_snapshots: {
+        Row: {
+          id: string;
+          workspace_id: string; watchlist_id: string;
+          run_id: string; context_snapshot_id: string | null;
+          conflict_integration_profile_id: string | null;
+          base_signal_score: number | string | null;
+          cross_asset_net_contribution: number | string | null;
+          weighted_cross_asset_net_contribution: number | string | null;
+          regime_adjusted_cross_asset_contribution: number | string | null;
+          timing_adjusted_cross_asset_contribution: number | string | null;
+          transition_adjusted_cross_asset_contribution: number | string | null;
+          archetype_adjusted_cross_asset_contribution: number | string | null;
+          cluster_adjusted_cross_asset_contribution: number | string | null;
+          persistence_adjusted_cross_asset_contribution: number | string | null;
+          decay_adjusted_cross_asset_contribution: number | string | null;
+          conflict_adjusted_cross_asset_contribution: number | string | null;
+          composite_pre_conflict: number | string | null;
+          conflict_net_contribution: number | string | null;
+          composite_post_conflict: number | string | null;
+          layer_consensus_state: string;
+          agreement_score: number | string | null;
+          conflict_score: number | string | null;
+          dominant_conflict_source: string | null;
+          integration_mode: string;
+          source_contribution_layer: string | null;
+          source_composite_layer: string | null;
+          scoring_version: string;
+          metadata: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["cross_asset_conflict_composite_snapshots"]["Row"]> & {
+          workspace_id: string; watchlist_id: string; run_id: string; integration_mode: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["cross_asset_conflict_composite_snapshots"]["Row"]>;
+        Relationships: [];
+      };
+      cross_asset_family_conflict_composite_snapshots: {
+        Row: {
+          id: string;
+          workspace_id: string; watchlist_id: string;
+          run_id: string; context_snapshot_id: string | null;
+          dependency_family: string;
+          family_consensus_state: string;
+          agreement_score: number | string | null;
+          conflict_score: number | string | null;
+          dominant_conflict_source: string | null;
+          conflict_adjusted_family_contribution: number | string | null;
+          integration_weight_applied: number | string | null;
+          conflict_integration_contribution: number | string | null;
+          family_rank: number | null;
+          top_symbols: string[];
+          reason_codes: string[];
+          source_contribution_layer: string | null;
+          scoring_version: string;
+          metadata: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["cross_asset_family_conflict_composite_snapshots"]["Row"]> & {
+          workspace_id: string; watchlist_id: string; run_id: string; dependency_family: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["cross_asset_family_conflict_composite_snapshots"]["Row"]>;
+        Relationships: [];
+      };
+      cross_asset_conflict_composite_summary: {
+        Row: {
+          workspace_id: string; watchlist_id: string;
+          run_id: string; context_snapshot_id: string | null;
+          base_signal_score: number | string | null;
+          cross_asset_net_contribution: number | string | null;
+          weighted_cross_asset_net_contribution: number | string | null;
+          regime_adjusted_cross_asset_contribution: number | string | null;
+          timing_adjusted_cross_asset_contribution: number | string | null;
+          transition_adjusted_cross_asset_contribution: number | string | null;
+          archetype_adjusted_cross_asset_contribution: number | string | null;
+          cluster_adjusted_cross_asset_contribution: number | string | null;
+          persistence_adjusted_cross_asset_contribution: number | string | null;
+          decay_adjusted_cross_asset_contribution: number | string | null;
+          conflict_adjusted_cross_asset_contribution: number | string | null;
+          composite_pre_conflict: number | string | null;
+          conflict_net_contribution: number | string | null;
+          composite_post_conflict: number | string | null;
+          layer_consensus_state: string;
+          agreement_score: number | string | null;
+          conflict_score: number | string | null;
+          dominant_conflict_source: string | null;
+          integration_mode: string;
+          source_contribution_layer: string | null;
+          source_composite_layer: string | null;
+          scoring_version: string;
+          created_at: string;
+        };
+        Relationships: [];
+      };
+      cross_asset_family_conflict_composite_summary: {
+        Row: {
+          workspace_id: string; watchlist_id: string;
+          run_id: string; context_snapshot_id: string | null;
+          dependency_family: string;
+          family_consensus_state: string;
+          agreement_score: number | string | null;
+          conflict_score: number | string | null;
+          dominant_conflict_source: string | null;
+          conflict_adjusted_family_contribution: number | string | null;
+          integration_weight_applied: number | string | null;
+          conflict_integration_contribution: number | string | null;
+          family_rank: number | null;
+          top_symbols: string[];
+          reason_codes: string[];
+          source_contribution_layer: string | null;
+          scoring_version: string;
+          created_at: string;
+        };
+        Relationships: [];
+      };
+      run_cross_asset_conflict_integration_summary: {
+        Row: {
+          run_id: string; workspace_id: string; watchlist_id: string;
+          context_snapshot_id: string | null;
+          cross_asset_net_contribution: number | string | null;
+          weighted_cross_asset_net_contribution: number | string | null;
+          regime_adjusted_cross_asset_contribution: number | string | null;
+          timing_adjusted_cross_asset_contribution: number | string | null;
+          transition_adjusted_cross_asset_contribution: number | string | null;
+          archetype_adjusted_cross_asset_contribution: number | string | null;
+          cluster_adjusted_cross_asset_contribution: number | string | null;
+          persistence_adjusted_cross_asset_contribution: number | string | null;
+          decay_adjusted_cross_asset_contribution: number | string | null;
+          conflict_adjusted_cross_asset_contribution: number | string | null;
+          conflict_net_contribution: number | string | null;
+          composite_pre_conflict: number | string | null;
+          composite_post_conflict: number | string | null;
+          dominant_dependency_family: string | null;
+          weighted_dominant_dependency_family: string | null;
+          regime_dominant_dependency_family: string | null;
+          timing_dominant_dependency_family: string | null;
+          transition_dominant_dependency_family: string | null;
+          archetype_dominant_dependency_family: string | null;
+          cluster_dominant_dependency_family: string | null;
+          persistence_dominant_dependency_family: string | null;
+          decay_dominant_dependency_family: string | null;
+          conflict_dominant_dependency_family: string | null;
+          layer_consensus_state: string | null;
+          agreement_score: number | string | null;
+          conflict_score: number | string | null;
+          dominant_conflict_source: string | null;
+          integration_mode: string | null;
+          source_contribution_layer: string | null;
+          source_composite_layer: string | null;
+          scoring_version: string | null;
+          created_at: string;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       enqueue_recompute_job: {

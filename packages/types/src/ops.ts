@@ -4950,6 +4950,117 @@ export interface CrossAssetConflictAttributionMetrics {
   runConflictAttributionSummary: RunCrossAssetConflictAttributionSummaryRow[];
 }
 
+// ── Phase 4.8C: Conflict-Aware Composite Refinement ─────────────────────
+export type CrossAssetLayerConsensusState =
+  | "aligned_supportive"
+  | "aligned_suppressive"
+  | "partial_agreement"
+  | "conflicted"
+  | "unreliable"
+  | "insufficient_context";
+
+export type CrossAssetConflictIntegrationMode =
+  | "conflict_additive_guardrailed"
+  | "aligned_supportive_confirmation_only"
+  | "conflict_suppression_only"
+  | "unreliable_suppression_only";
+
+export interface CrossAssetConflictCompositeSummaryRow {
+  workspace_id: string;
+  watchlist_id: string;
+  run_id: string;
+  context_snapshot_id: string | null;
+  base_signal_score: number | string | null;
+  cross_asset_net_contribution: number | string | null;
+  weighted_cross_asset_net_contribution: number | string | null;
+  regime_adjusted_cross_asset_contribution: number | string | null;
+  timing_adjusted_cross_asset_contribution: number | string | null;
+  transition_adjusted_cross_asset_contribution: number | string | null;
+  archetype_adjusted_cross_asset_contribution: number | string | null;
+  cluster_adjusted_cross_asset_contribution: number | string | null;
+  persistence_adjusted_cross_asset_contribution: number | string | null;
+  decay_adjusted_cross_asset_contribution: number | string | null;
+  conflict_adjusted_cross_asset_contribution: number | string | null;
+  composite_pre_conflict: number | string | null;
+  conflict_net_contribution: number | string | null;
+  composite_post_conflict: number | string | null;
+  layer_consensus_state: CrossAssetLayerConsensusState;
+  agreement_score: number | string | null;
+  conflict_score: number | string | null;
+  dominant_conflict_source: string | null;
+  integration_mode: CrossAssetConflictIntegrationMode;
+  source_contribution_layer: string | null;
+  source_composite_layer: string | null;
+  scoring_version: string;
+  created_at: string;
+}
+
+export interface CrossAssetFamilyConflictCompositeSummaryRow {
+  workspace_id: string;
+  watchlist_id: string;
+  run_id: string;
+  context_snapshot_id: string | null;
+  dependency_family: string;
+  family_consensus_state: CrossAssetLayerConsensusState;
+  agreement_score: number | string | null;
+  conflict_score: number | string | null;
+  dominant_conflict_source: string | null;
+  conflict_adjusted_family_contribution: number | string | null;
+  integration_weight_applied: number | string | null;
+  conflict_integration_contribution: number | string | null;
+  family_rank: number | null;
+  top_symbols: string[];
+  reason_codes: string[];
+  source_contribution_layer: string | null;
+  scoring_version: string;
+  created_at: string;
+}
+
+export interface RunCrossAssetConflictIntegrationSummaryRow {
+  run_id: string;
+  workspace_id: string;
+  watchlist_id: string;
+  context_snapshot_id: string | null;
+  cross_asset_net_contribution: number | string | null;
+  weighted_cross_asset_net_contribution: number | string | null;
+  regime_adjusted_cross_asset_contribution: number | string | null;
+  timing_adjusted_cross_asset_contribution: number | string | null;
+  transition_adjusted_cross_asset_contribution: number | string | null;
+  archetype_adjusted_cross_asset_contribution: number | string | null;
+  cluster_adjusted_cross_asset_contribution: number | string | null;
+  persistence_adjusted_cross_asset_contribution: number | string | null;
+  decay_adjusted_cross_asset_contribution: number | string | null;
+  conflict_adjusted_cross_asset_contribution: number | string | null;
+  conflict_net_contribution: number | string | null;
+  composite_pre_conflict: number | string | null;
+  composite_post_conflict: number | string | null;
+  dominant_dependency_family: string | null;
+  weighted_dominant_dependency_family: string | null;
+  regime_dominant_dependency_family: string | null;
+  timing_dominant_dependency_family: string | null;
+  transition_dominant_dependency_family: string | null;
+  archetype_dominant_dependency_family: string | null;
+  cluster_dominant_dependency_family: string | null;
+  persistence_dominant_dependency_family: string | null;
+  decay_dominant_dependency_family: string | null;
+  conflict_dominant_dependency_family: string | null;
+  layer_consensus_state: CrossAssetLayerConsensusState | null;
+  agreement_score: number | string | null;
+  conflict_score: number | string | null;
+  dominant_conflict_source: string | null;
+  integration_mode: CrossAssetConflictIntegrationMode | null;
+  source_contribution_layer: string | null;
+  source_composite_layer: string | null;
+  scoring_version: string | null;
+  created_at: string;
+}
+
+export interface CrossAssetConflictCompositeMetrics {
+  conflictCompositeSummary: CrossAssetConflictCompositeSummaryRow[];
+  familyConflictCompositeSummary: CrossAssetFamilyConflictCompositeSummaryRow[];
+  finalConflictIntegrationSummary: RunCrossAssetConflictIntegrationSummaryRow[];
+}
+
 // ── Phase 4.7A: Signal Decay & Stale-Memory Diagnostics ─────────────────
 export type CrossAssetSignalFreshnessState =
   | "fresh"
