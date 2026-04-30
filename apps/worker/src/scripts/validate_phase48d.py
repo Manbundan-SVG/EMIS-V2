@@ -28,10 +28,63 @@ import asyncpg
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 
+def _parse_postgres_url(url: str) -> dict:
+    """Hand-rolled DSN parser to bypass Python 3.14's overzealous
+    urllib.parse._check_bracketed_host check. asyncpg.connect(dsn=...)
+    routes through urllib.parse, which throws ValueError on perfectly
+    valid Supabase hostnames if any '[' appears anywhere in the netloc.
+    Calling asyncpg.connect with explicit kwargs avoids urllib entirely.
+    """
+    if url.startswith("postgresql://"):
+        rest = url[len("postgresql://"):]
+    elif url.startswith("postgres://"):
+        rest = url[len("postgres://"):]
+    else:
+        raise ValueError("DSN must start with postgresql:// or postgres://")
+
+    at_idx = rest.rfind("@")
+    if at_idx < 0:
+        raise ValueError("DSN missing '@' between userinfo and host")
+    userinfo = rest[:at_idx]
+    hostpart = rest[at_idx + 1:]
+
+    if ":" in userinfo:
+        user, password = userinfo.split(":", 1)
+    else:
+        user, password = userinfo, ""
+
+    slash_idx = hostpart.find("/")
+    if slash_idx < 0:
+        raise ValueError("DSN missing '/' before database name")
+    hostport = hostpart[:slash_idx]
+    rest_of_url = hostpart[slash_idx + 1:]
+
+    if ":" in hostport:
+        host, port_str = hostport.rsplit(":", 1)
+        port = int(port_str)
+    else:
+        host, port = hostport, 5432
+
+    if host.startswith("[") and host.endswith("]"):
+        host = host[1:-1]
+
+    q_idx = rest_of_url.find("?")
+    database = rest_of_url[:q_idx] if q_idx >= 0 else rest_of_url
+
+    return {
+        "user":     user,
+        "password": password,
+        "host":     host,
+        "port":     port,
+        "database": database,
+    }
+
+
 async def get_conn() -> asyncpg.Connection:
     if not DATABASE_URL:
         sys.exit("DATABASE_URL not set")
-    return await asyncpg.connect(DATABASE_URL)
+    kwargs = _parse_postgres_url(DATABASE_URL)
+    return await asyncpg.connect(**kwargs)
 
 
 async def setup(conn: asyncpg.Connection) -> tuple[str, str]:
