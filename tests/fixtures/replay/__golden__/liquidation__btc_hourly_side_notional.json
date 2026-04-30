@@ -1,0 +1,162 @@
+[
+  {
+    "hour_start_ts": "2024-01-01T00:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "283974.504308538085"
+  },
+  {
+    "hour_start_ts": "2024-01-01T00:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "525.500152823347"
+  },
+  {
+    "hour_start_ts": "2024-01-01T01:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "47344.901958528962"
+  },
+  {
+    "hour_start_ts": "2024-01-01T02:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "3499.354649924640"
+  },
+  {
+    "hour_start_ts": "2024-01-01T04:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "73613.469622006571"
+  },
+  {
+    "hour_start_ts": "2024-01-01T05:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "628.992917746153"
+  },
+  {
+    "hour_start_ts": "2024-01-01T05:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "2573.903552748374"
+  },
+  {
+    "hour_start_ts": "2024-01-01T06:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "26319.009018394816"
+  },
+  {
+    "hour_start_ts": "2024-01-01T06:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "710.563099635481"
+  },
+  {
+    "hour_start_ts": "2024-01-01T07:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "16755.027564244406"
+  },
+  {
+    "hour_start_ts": "2024-01-01T07:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "276574.379814559403"
+  },
+  {
+    "hour_start_ts": "2024-01-01T08:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "907.554890797791"
+  },
+  {
+    "hour_start_ts": "2024-01-01T08:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "8649.189151901566"
+  },
+  {
+    "hour_start_ts": "2024-01-01T09:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "120174.734063268969"
+  },
+  {
+    "hour_start_ts": "2024-01-01T10:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "11688.722276150459"
+  },
+  {
+    "hour_start_ts": "2024-01-01T12:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "37847.986480173419"
+  },
+  {
+    "hour_start_ts": "2024-01-01T12:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "61896.055338080295"
+  },
+  {
+    "hour_start_ts": "2024-01-01T13:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "100198.325316459207"
+  },
+  {
+    "hour_start_ts": "2024-01-01T15:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "44373.483539421729"
+  },
+  {
+    "hour_start_ts": "2024-01-01T16:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "70258.374222690289"
+  },
+  {
+    "hour_start_ts": "2024-01-01T16:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "1968.766720091860"
+  },
+  {
+    "hour_start_ts": "2024-01-01T17:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "13173.791556514149"
+  },
+  {
+    "hour_start_ts": "2024-01-01T18:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "340976.974335189839"
+  },
+  {
+    "hour_start_ts": "2024-01-01T18:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "3202.739432170410"
+  },
+  {
+    "hour_start_ts": "2024-01-01T19:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "1001.027880408180"
+  },
+  {
+    "hour_start_ts": "2024-01-01T19:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "252149.852644160166"
+  },
+  {
+    "hour_start_ts": "2024-01-01T20:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "86936.218210976281"
+  },
+  {
+    "hour_start_ts": "2024-01-01T20:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "1178.198156876727"
+  },
+  {
+    "hour_start_ts": "2024-01-01T21:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "78169.874150009765"
+  },
+  {
+    "hour_start_ts": "2024-01-01T22:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "131283.783725211327"
+  },
+  {
+    "hour_start_ts": "2024-01-01T22:00:00.000Z",
+    "side": "short",
+    "total_notional_usd": "8978.538774277896"
+  },
+  {
+    "hour_start_ts": "2024-01-01T23:00:00.000Z",
+    "side": "long",
+    "total_notional_usd": "1731.675976764449"
+  }
+]

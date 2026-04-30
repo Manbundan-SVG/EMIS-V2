@@ -1,0 +1,62 @@
+[
+  {
+    "configHash": "06d8953fe0a6c9b688b7fbc262aabcc6282ba3248145ac0a0f3f3f1f748449cf",
+    "createdAt": "2026-04-29T22:28:25.203Z",
+    "featureVersion": "hourly_liq_side_notional@1.0.0",
+    "fixtureGeneratorVersion": "generate_replay_fixtures@1.0.0",
+    "fixtureSeed": "emis-replay-v1:2026-04-29",
+    "modelVersion": "n/a",
+    "outputHash": "14d6b861b9b1447ffc70b7d39b2cb8984f1f92e51482f54c0098ba7f7496125e",
+    "rawInputHash": "663533eccebb9d777e2e3f26b6e0f86596a82ce3a0c42c810bdb5937c91fdf76",
+    "replayWindowEnd": "2024-01-01T23:43:47.000Z",
+    "replayWindowStart": "2024-01-01T00:18:07.000Z",
+    "schemaVersion": "liquidation_fixture@1.0.0",
+    "target": "liquidation:btc_hourly_side_notional",
+    "validatorVersion": "validate_replay@1.0.0"
+  },
+  {
+    "configHash": "1ff2188212f1fc9d7551f71b686b0bc8657ddfabe94deeb5abb995f2a25aebfa",
+    "createdAt": "2026-04-29T22:28:25.212Z",
+    "featureVersion": "indicator_zscore_30@1.0.0",
+    "fixtureGeneratorVersion": "generate_replay_fixtures@1.0.0",
+    "fixtureSeed": "emis-replay-v1:2026-04-29",
+    "modelVersion": "n/a",
+    "outputHash": "deb20bb8dc391cad3857cef17f0a16a3fb5a507a772c5eefdcea578f8e08dfa3",
+    "rawInputHash": "21fb5826f6ef07fbd2dce48b23f3fb1316ff2a304bcf60ea9271235b42e487e8",
+    "replayWindowEnd": "2024-01-10T18:00:00.000Z",
+    "replayWindowStart": "2024-01-01T00:00:00.000Z",
+    "schemaVersion": "macro_fixture@1.0.0",
+    "target": "macro:indicator_zscore_30",
+    "validatorVersion": "validate_replay@1.0.0"
+  },
+  {
+    "configHash": "dffdd4b5fdadd4866a14f4b9fb3e2764a4167ff1f1b3f89ac6ac1866edd9bcfc",
+    "createdAt": "2026-04-29T22:28:25.197Z",
+    "featureVersion": "sma5@1.0.0",
+    "fixtureGeneratorVersion": "generate_replay_fixtures@1.0.0",
+    "fixtureSeed": "emis-replay-v1:2026-04-29",
+    "modelVersion": "n/a",
+    "outputHash": "794750f7dd014fa1faffeac27cce1933c146b7c233b2ff835fc3734d69bd8011",
+    "rawInputHash": "1dc00baeeabaf192beede86ae87674d583c11ca471608e1886d83d92b5766dd2",
+    "replayWindowEnd": "2024-01-01T23:00:00.000Z",
+    "replayWindowStart": "2024-01-01T00:00:00.000Z",
+    "schemaVersion": "market_data_fixture@1.0.0",
+    "target": "market_data:btc_1h_sma5",
+    "validatorVersion": "validate_replay@1.0.0"
+  },
+  {
+    "configHash": "72dea605f4ce618563fc1ce159cb14858b5a9a35d68ea4478be114ec2a88d2e0",
+    "createdAt": "2026-04-29T22:28:25.207Z",
+    "featureVersion": "source_weighted_hourly@1.0.0",
+    "fixtureGeneratorVersion": "generate_replay_fixtures@1.0.0",
+    "fixtureSeed": "emis-replay-v1:2026-04-29",
+    "modelVersion": "n/a",
+    "outputHash": "2900a2f84743f1d4eba6a4fa91e549e97175562d99682c304041b25511e7dd41",
+    "rawInputHash": "da864dffea757cca8df3e7f10f397977c65becaa6aa0663edc1cd875acb083ab",
+    "replayWindowEnd": "2024-01-01T22:48:26.000Z",
+    "replayWindowStart": "2024-01-01T00:17:15.000Z",
+    "schemaVersion": "sentiment_fixture@1.0.0",
+    "target": "sentiment:btc_source_weighted_hourly",
+    "validatorVersion": "validate_replay@1.0.0"
+  }
+]
