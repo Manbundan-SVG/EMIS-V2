@@ -5061,6 +5061,150 @@ export interface CrossAssetConflictCompositeMetrics {
   finalConflictIntegrationSummary: RunCrossAssetConflictIntegrationSummaryRow[];
 }
 
+// ── Phase 4.8D: Replay Validation for Conflict-Aware Behavior ───────────
+export type CrossAssetConflictReplayValidationState =
+  | "validated"
+  | "drift_detected"
+  | "insufficient_source"
+  | "insufficient_replay"
+  | "context_mismatch"
+  | "timing_mismatch"
+  | "transition_mismatch"
+  | "archetype_mismatch"
+  | "cluster_mismatch"
+  | "persistence_mismatch"
+  | "decay_mismatch"
+  | "conflict_mismatch";
+
+export interface CrossAssetConflictReplayValidationSummaryRow {
+  workspace_id: string;
+  watchlist_id: string;
+  source_run_id: string;
+  replay_run_id: string;
+  source_context_snapshot_id: string | null;
+  replay_context_snapshot_id: string | null;
+  source_regime_key: string | null;
+  replay_regime_key: string | null;
+  source_dominant_timing_class: string | null;
+  replay_dominant_timing_class: string | null;
+  source_dominant_transition_state: string | null;
+  replay_dominant_transition_state: string | null;
+  source_dominant_sequence_class: string | null;
+  replay_dominant_sequence_class: string | null;
+  source_dominant_archetype_key: string | null;
+  replay_dominant_archetype_key: string | null;
+  source_cluster_state: string | null;
+  replay_cluster_state: string | null;
+  source_persistence_state: string | null;
+  replay_persistence_state: string | null;
+  source_freshness_state: string | null;
+  replay_freshness_state: string | null;
+  source_layer_consensus_state: string | null;
+  replay_layer_consensus_state: string | null;
+  source_agreement_score: number | string | null;
+  replay_agreement_score: number | string | null;
+  source_conflict_score: number | string | null;
+  replay_conflict_score: number | string | null;
+  source_dominant_conflict_source: string | null;
+  replay_dominant_conflict_source: string | null;
+  source_contribution_layer: string | null;
+  replay_contribution_layer: string | null;
+  source_composite_layer: string | null;
+  replay_composite_layer: string | null;
+  source_scoring_version: string | null;
+  replay_scoring_version: string | null;
+  context_hash_match: boolean;
+  regime_match: boolean;
+  timing_class_match: boolean;
+  transition_state_match: boolean;
+  sequence_class_match: boolean;
+  archetype_match: boolean;
+  cluster_state_match: boolean;
+  persistence_state_match: boolean;
+  freshness_state_match: boolean;
+  layer_consensus_state_match: boolean;
+  agreement_score_match: boolean;
+  conflict_score_match: boolean;
+  dominant_conflict_source_match: boolean;
+  source_contribution_layer_match: boolean;
+  source_composite_layer_match: boolean;
+  scoring_version_match: boolean;
+  conflict_attribution_match: boolean;
+  conflict_composite_match: boolean;
+  conflict_dominant_family_match: boolean;
+  drift_reason_codes: string[];
+  validation_state: CrossAssetConflictReplayValidationState;
+  created_at: string;
+}
+
+export interface CrossAssetFamilyConflictReplayStabilitySummaryRow {
+  workspace_id: string;
+  watchlist_id: string;
+  source_run_id: string;
+  replay_run_id: string;
+  dependency_family: string;
+  source_family_consensus_state: string | null;
+  replay_family_consensus_state: string | null;
+  source_agreement_score: number | string | null;
+  replay_agreement_score: number | string | null;
+  source_conflict_score: number | string | null;
+  replay_conflict_score: number | string | null;
+  source_dominant_conflict_source: string | null;
+  replay_dominant_conflict_source: string | null;
+  source_contribution_layer: string | null;
+  replay_contribution_layer: string | null;
+  source_scoring_version: string | null;
+  replay_scoring_version: string | null;
+  source_conflict_adjusted_contribution: number | string | null;
+  replay_conflict_adjusted_contribution: number | string | null;
+  source_conflict_integration_contribution: number | string | null;
+  replay_conflict_integration_contribution: number | string | null;
+  conflict_adjusted_delta: number | string | null;
+  conflict_integration_delta: number | string | null;
+  family_consensus_state_match: boolean;
+  agreement_score_match: boolean;
+  conflict_score_match: boolean;
+  dominant_conflict_source_match: boolean;
+  source_contribution_layer_match: boolean;
+  scoring_version_match: boolean;
+  conflict_family_rank_match: boolean;
+  conflict_composite_family_rank_match: boolean;
+  drift_reason_codes: string[];
+  created_at: string;
+}
+
+export interface CrossAssetConflictReplayStabilityAggregateRow {
+  workspace_id: string;
+  validation_count: number;
+  context_match_rate: number | string | null;
+  regime_match_rate: number | string | null;
+  timing_class_match_rate: number | string | null;
+  transition_state_match_rate: number | string | null;
+  sequence_class_match_rate: number | string | null;
+  archetype_match_rate: number | string | null;
+  cluster_state_match_rate: number | string | null;
+  persistence_state_match_rate: number | string | null;
+  freshness_state_match_rate: number | string | null;
+  layer_consensus_state_match_rate: number | string | null;
+  agreement_score_match_rate: number | string | null;
+  conflict_score_match_rate: number | string | null;
+  dominant_conflict_source_match_rate: number | string | null;
+  source_contribution_layer_match_rate: number | string | null;
+  source_composite_layer_match_rate: number | string | null;
+  scoring_version_match_rate: number | string | null;
+  conflict_attribution_match_rate: number | string | null;
+  conflict_composite_match_rate: number | string | null;
+  conflict_dominant_family_match_rate: number | string | null;
+  drift_detected_count: number;
+  latest_validated_at: string | null;
+}
+
+export interface CrossAssetConflictReplayValidationMetrics {
+  conflictReplayValidationSummary: CrossAssetConflictReplayValidationSummaryRow[];
+  familyConflictReplayStabilitySummary: CrossAssetFamilyConflictReplayStabilitySummaryRow[];
+  conflictReplayStabilityAggregate: CrossAssetConflictReplayStabilityAggregateRow | null;
+}
+
 // ── Phase 4.7A: Signal Decay & Stale-Memory Diagnostics ─────────────────
 export type CrossAssetSignalFreshnessState =
   | "fresh"

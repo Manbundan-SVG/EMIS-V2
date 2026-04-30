@@ -200,6 +200,7 @@ from src.services.cross_asset_decay_replay_validation_service import CrossAssetD
 from src.services.cross_asset_layer_conflict_service import CrossAssetLayerConflictService
 from src.services.cross_asset_conflict_attribution_service import CrossAssetConflictAttributionService
 from src.services.cross_asset_conflict_composite_service import CrossAssetConflictCompositeService
+from src.services.cross_asset_conflict_replay_validation_service import CrossAssetConflictReplayValidationService
 from src.services.regime_threshold_service import RegimeThresholdService
 from src.services.regime_transition_service import analyze_regime_transition
 from src.services.replay_delta_service import build_replay_delta
@@ -1621,6 +1622,7 @@ def run_forever() -> None:
     cross_asset_layer_conflict_service = CrossAssetLayerConflictService()
     cross_asset_conflict_attribution_service = CrossAssetConflictAttributionService()
     cross_asset_conflict_composite_service = CrossAssetConflictCompositeService()
+    cross_asset_conflict_replay_validation_service = CrossAssetConflictReplayValidationService()
     logger.info("starting worker loop worker_id=%s", settings.worker_id)
 
     while True:
@@ -3348,6 +3350,18 @@ def run_forever() -> None:
                         except Exception:
                             logger.warning(
                                 "cross_asset_conflict_composite failed for workspace=%s, continuing",
+                                workspace_id,
+                                exc_info=True,
+                            )
+                        try:
+                            cross_asset_conflict_replay_validation_service.refresh_conflict_replay_validation_for_run(
+                                conn,
+                                workspace_id=workspace_id,
+                                run_id=str(job_id),
+                            )
+                        except Exception:
+                            logger.warning(
+                                "cross_asset_conflict_replay_validation failed for workspace=%s, continuing",
                                 workspace_id,
                                 exc_info=True,
                             )
