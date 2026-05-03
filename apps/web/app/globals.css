@@ -71,6 +71,14 @@ a { color: inherit; text-decoration: none; }
 .btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
 .text-xs { font-size: 0.75rem; }
 .text-sm { font-size: 0.8rem; }
+/* Phase Frontend V1.0 — colored badges used across cross-asset panels and the intelligence console */
+.badge-green  { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(44,197,138,0.15);  color: var(--good); font-size: 12px; font-weight: 600; }
+.badge-red    { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(255,107,129,0.15); color: var(--bad);  font-size: 12px; font-weight: 600; }
+.badge-yellow { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(217,119,6,0.18);   color: #f59e0b;     font-size: 12px; font-weight: 600; }
+.badge-muted  { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(125,138,166,0.18); color: var(--muted);font-size: 12px; font-weight: 600; }
+.dataTable { width: 100%; border-collapse: collapse; }
+.dataTable th, .dataTable td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.small { font-size: 12px; }
 @media (max-width: 980px) {
   .ops-grid { grid-template-columns: repeat(2, 1fr); }
   .ops-panels { grid-template-columns: 1fr; }
